@@ -4,3 +4,4 @@ main: com.cuzz.dialogTest.DialogTest
 api-version: '1.21'
 depend:
   - BetterHud
+#测试commit
