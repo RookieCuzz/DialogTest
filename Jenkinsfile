@@ -3,8 +3,8 @@ pipeline {
 
     tools {
         // 这些工具需在 Jenkins 管理页面配置 Global Tool Configuration
-        maven 'Maven 3.8.6'
-        jdk 'JDK 11'
+        maven 'Maven 3.9.11'
+        jdk 'JDK 17'
     }
 
     options {
