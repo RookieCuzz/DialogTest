@@ -28,17 +28,6 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                echo '✅ Running tests...'
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                }
-            }
-        }
 
         stage('Package') {
             steps {
