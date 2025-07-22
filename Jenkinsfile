@@ -40,6 +40,24 @@ pipeline {
                 }
             }
         }
+
+         stage('Docker Build & Push') {
+            steps {
+                script {
+                    // 定义镜像名字和 Tag
+                    def imageTag = "${env.REGISTRY ?: 'myregistry.example.com'}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                    echo "🏗️ Building Docker image: ${imageTag}"
+                    sh """
+                        docker build -t ${imageTag} .
+                        docker push ${imageTag}
+                    """
+                }
+            }
+        }
+
+
+
+        
     }
 
     post {
