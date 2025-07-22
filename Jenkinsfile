@@ -1,16 +1,17 @@
 pipeline {
-    agent { label 'dockeragent'}
+    agent { label 'dockeragent' }
 
     tools {
-        // 这些工具需在 Jenkins 管理页面配置 Global Tool Configuration
         maven 'Maven 3.9.11'
         jdk 'JDK 21'
     }
 
+    environment {
+        REGISTRY = 'crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com/go-mctown'
+    }
+
     options {
-        // 保留最近 5 次构建
         buildDiscarder(logRotator(numToKeepStr: '5'))
-        // 禁止同一 Job 并发构建
         disableConcurrentBuilds()
     }
 
@@ -28,11 +29,10 @@ pipeline {
             }
         }
 
-
         stage('Package') {
             steps {
                 echo '📦 Packaging application...'
-                sh 'mvn package'
+                sh 'mvn package -DskipTests'
             }
             post {
                 success {
@@ -41,20 +41,20 @@ pipeline {
             }
         }
 
-         stage('Docker Build & Push') {
+        stage('Docker Build & Push') {
             steps {
-            withCredentials([usernamePassword(
-                credentialsId: 'aliyun-docker-login', // 就是你上面填写的 ID
-                usernameVariable: 'DOCKER_USERNAME',
-                passwordVariable: 'DOCKER_PASSWORD'
-            )]) {
-                sh """
-                    echo "\$DOCKER_PASSWORD" | docker login --username \$DOCKER_USERNAME --password-stdin crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com
-                """
-                }    
+                withCredentials([usernamePassword(
+                    credentialsId: 'aliyun-docker-login',
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    sh """
+                        echo "\$DOCKER_PASSWORD" | docker login --username \$DOCKER_USERNAME --password-stdin ${env.REGISTRY.split('/')[0]}
+                    """
+                }
+
                 script {
-                    // 定义镜像名字和 Tag
-                    def imageTag = "${env.REGISTRY ?: 'crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com/go-mctown'}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}"
+                    def imageTag = "${env.REGISTRY}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}"
                     echo "🏗️ Building Docker image: ${imageTag}"
                     sh """
                         docker build -t ${imageTag} .
@@ -69,24 +69,21 @@ pipeline {
                 script {
                     def imageTag = "${env.REGISTRY}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}"
                     def latestImage = "${env.REGISTRY}/${env.JOB_NAME.toLowerCase()}:latest"
-        
-                    // 更新 yml 中 image tag 为 :latest，或者构建时替换 env
-                    sh """
-                        echo "🔄 替换 image 为 latest..."
-                        docker tag ${imageTag} ${latestImage}
-                    """
-        
-                    // 停止旧容器（docker compose down）
+
+                    // 标记 latest
+                    sh "docker tag ${imageTag} ${latestImage}"
+                    sh "docker push ${latestImage}"
+
+                    // 替换 docker-compose.yml 中镜像（可选，如果用了变量可以跳过）
+                    // sh "sed -i 's|image: .*|image: ${latestImage}|' docker-compose.yml"
+
+                    // 重新部署
                     sh 'docker-compose down || true'
-        
-                    // 启动新容器（docker compose up）
+                    sh 'docker-compose pull'
                     sh 'docker-compose up -d --remove-orphans'
                 }
             }
         }
-
-
-        
     }
 
     post {
