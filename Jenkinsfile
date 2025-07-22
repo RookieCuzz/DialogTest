@@ -78,9 +78,9 @@ pipeline {
                     // sh "sed -i 's|image: .*|image: ${latestImage}|' docker-compose.yml"
 
                     // 重新部署
-                    sh 'docker-compose down || true'
-                    sh 'docker-compose pull'
-                    sh 'docker-compose up -d --remove-orphans'
+                    sh 'docker compose down || true'
+                    sh 'docker compose pull'
+                    sh 'docker compose up -d --remove-orphans'
                 }
             }
         }
