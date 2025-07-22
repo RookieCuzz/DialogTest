@@ -43,9 +43,10 @@ pipeline {
 
          stage('Docker Build & Push') {
             steps {
+                sh 'docker login --username=xxl1875417678 crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com'
                 script {
                     // 定义镜像名字和 Tag
-                    def imageTag = "${env.REGISTRY ?: 'myregistry.example.com'}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}"
+                    def imageTag = "${env.REGISTRY ?: 'crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com/go-mctown'}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}"
                     echo "🏗️ Building Docker image: ${imageTag}"
                     sh """
                         docker build -t ${imageTag} .
