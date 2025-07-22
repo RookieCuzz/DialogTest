@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'dockeragent'}
 
     tools {
         // 这些工具需在 Jenkins 管理页面配置 Global Tool Configuration
