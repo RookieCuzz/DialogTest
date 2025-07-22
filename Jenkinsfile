@@ -64,6 +64,26 @@ pipeline {
             }
         }
 
+        stage('Deploy with Compose') {
+            steps {
+                script {
+                    def imageTag = "${env.REGISTRY}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}"
+                    def latestImage = "${env.REGISTRY}/${env.JOB_NAME.toLowerCase()}:latest"
+        
+                    // 更新 yml 中 image tag 为 :latest，或者构建时替换 env
+                    sh """
+                        echo "🔄 替换 image 为 latest..."
+                        docker tag ${imageTag} ${latestImage}
+                    """
+        
+                    // 停止旧容器（docker compose down）
+                    sh 'docker-compose down || true'
+        
+                    // 启动新容器（docker compose up）
+                    sh 'docker-compose up -d --remove-orphans'
+                }
+            }
+        }
 
 
         
