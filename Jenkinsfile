@@ -43,7 +43,15 @@ pipeline {
 
          stage('Docker Build & Push') {
             steps {
-                sh 'docker login --username=xxl1875417678 crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com'
+            withCredentials([usernamePassword(
+                credentialsId: 'aliyun-docker-login', // 就是你上面填写的 ID
+                usernameVariable: 'DOCKER_USERNAME',
+                passwordVariable: 'DOCKER_PASSWORD'
+            )]) {
+                sh """
+                    echo "\$DOCKER_PASSWORD" | docker login --username \$DOCKER_USERNAME --password-stdin crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com
+                """
+                }    
                 script {
                     // 定义镜像名字和 Tag
                     def imageTag = "${env.REGISTRY ?: 'crpi-vqe38j3xeblrq0n4.cn-hangzhou.personal.cr.aliyuncs.com/go-mctown'}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}"
